@@ -1,0 +1,21 @@
+{
+    "name": "davydgoloviy/sox",
+    "description": "Php audio editor",
+    "type": "library",
+    "require": {
+        "symfony/process": "^4.*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Holovii",
+            "email": "mirage.present@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MiragePresent\\Sox\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
