@@ -1,5 +1,5 @@
 {
-    "name": "davydgoloviy/sox",
+    "name": "miragepresent/sox",
     "description": "Php audio editor",
     "type": "library",
     "require": {
