@@ -6,7 +6,7 @@ namespace MiragePresent\Sox;
 use MiragePresent\Sox\Classes\Input;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
-use MiragePresent\Sox\Classes\Option;
+use MiragePresent\Sox\Classes\InputInterface;
 
 class Sox implements SoxInterface
 {
@@ -15,7 +15,7 @@ class Sox implements SoxInterface
     protected $sox;
 
     /** @var  string $mode Input File Combining  */
-    protected $mode = '';
+    protected $mode = ' --combine sequence';
 
     /** @var \Illuminate\Support\Collection $inputs Inputs */
     protected $inputs;
@@ -26,23 +26,40 @@ class Sox implements SoxInterface
         'options' => []
     ];
 
-    protected $modes = [
-        'mix' => '-m',
-        'concat' => ''
-    ];
-
     /**
      * Sox constructor.
      * @param string $mode Available `mix`, `concat`
      * @throws \InvalidArgumentException
      */
-    public function __construct(string $mode = 'concat')
+    public function __construct(string $mode = null)
     {
-        $this->verifyMode($mode);
+        if (is_string($mode)) {
+            $this->setMode($mode);
+        }
 
         $this->sox = config('sox.sox');
-        $this->mode = $this->modes[$mode];
         $this->inputs = collect();
+    }
+
+    /**
+     *  Set edit mode `concat`
+     *
+     * @return $this
+     */
+    public static function concat()
+    {
+        return new static( 'concatenate');
+    }
+
+    /**
+    /**
+     *  Set edit mode `concat`
+     *
+     * @return $this
+     */
+    public static function mix()
+    {
+        return new static( '-m');
     }
 
     /**
@@ -67,38 +84,12 @@ class Sox implements SoxInterface
     }
 
     /**
-     *  Set edit mode `concat`
-     *
-     * @return $this
-     */
-    public function concat()
-    {
-        $this->mode = $this->modes['concat'];
-
-        return $this;
-    }
-
-    /**
-    /**
-     *  Set edit mode `concat`
-     *
-     * @return $this
-     */
-    public function mix()
-    {
-        $this->mode = $this->modes['mix'];
-
-        return $this;
-    }
-
-
-    /**
      *  Add input file
      *
      * @param \MiragePresent\Sox\Classes\InputInterface $input File path
      * @return $this
      */
-    public function addInput(\MiragePresent\Sox\Classes\InputInterface $input)
+    public function addInput(InputInterface $input)
     {
 
         $this->inputs->push($input);
@@ -110,10 +101,10 @@ class Sox implements SoxInterface
      *  Output settings
      *
      * @param string $new_file
-     * @param array $options
+     * @param string $options
      * @return $this
      */
-    public function saveAs(string $new_file, array $options = [])
+    public function saveAs(string $new_file, string $options = '')
     {
         $this->output['path'] = $new_file;
         $this->output['options'] = $options;
@@ -155,7 +146,6 @@ class Sox implements SoxInterface
 
     }
 
-
     /**
      *  Get option as string
      *
@@ -179,61 +169,28 @@ class Sox implements SoxInterface
      */
     private function convertOutput()
     {
-        $options_string = collect($this->output['options'])
-            ->map(function ($value, $option) {
-                return Option::make($option, $value);
-            })
-            ->filter(function (Option $option) {
-                return $option->isValid();
-            })
-            ->implode(' ');
-
-        return $options_string . ' ' . $this->output['path'];
+        return $this->output['options'] . ' ' . $this->output['path'];
     }
 
     /**
-     *  Filter options
+     *  Set mode
+     *  @url http://sox.sourceforge.net/sox.html Input File Combining
      *
-     * @param array $options
-     * @return array
-     */
-    private function filterOptions(array $options)
-    {
-        return collect($options)
-            ->map(function ($value, $option) {
-                return Option::make($option, $value);
-            })
-            ->filter(function (Option $option) {
-                return $option->isValid();
-            });
-    }
-
-    /**
-     *  Get options string
-     *
-     * @param \Illuminate\Support\Collection $options
-     * @return string
-     */
-    private function convertOptions($options)
-    {
-        return $options
-            ->map(function (Option $option) {
-                return (string)$option;
-            })
-            ->implode(' ');
-    }
-
-    /**
      * @param string $mode
      * @throws \InvalidArgumentException
+     * @return \MiragePresent\Sox\SoxInterface
      */
-    private function verifyMode(string $mode)
+    private function setMode(string $mode)
     {
-        if ( ! array_key_exists($mode, $this->modes) ) {
-            $modes_string = "`" . implode("`, ", array_keys($this->modes)) . "`";
-            $message = "The mode `$mode`` is not supported. Supported modes are: $modes_string." ;
-            throw new \InvalidArgumentException( $message );
+        if (in_array($mode, ['sequence', 'concatenate', 'mix', 'mix-power', 'merge', 'multiply'])) {
+            $this->mode = " --combine $mode";
+            return $this;
+        } elseif (in_array($mode, ['−m', '−M', '-T'])) {
+            $this->mode = " $mode";
+            return $this;
         }
+
+        throw new \InvalidArgumentException("Mode '$mode' is not supported");
     }
 
 }

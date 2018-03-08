@@ -11,51 +11,34 @@ class Input implements InputInterface
     /** @var string $file */
     protected $file;
 
-    /** @var \Illuminate\Support\Collection */
-    protected $options;
-
-    /** @var \Illuminate\Support\Collection */
-    protected $effects;
-
-    /** @var int $volumeFactor */
-    protected $volumeFactor = 1.0;
+    /** @var int|float|null $volumeFactor */
+    protected $volumeFactor = null;
 
     protected $cutPoints = [];
+
+    /** @var bool Pipe mode */
+    protected $isPipe = false;
 
     /**
      *  Input constructor.
      * @param string $file
-     * @param array $options
-     * @param array $effects
      */
-    public function __construct(string $file, $options = [], $effects = [])
+    public function __construct(string $file)
     {
         $this->verifyFile($file);
 
         $this->file = $file;
         $this->sox = config('sox.sox');
-
-        $this->options = collect($options)
-            ->map(function ($value, $option) {
-                return Option::make($option, $value);
-            });
-
-        $this->effects = collect($effects)
-            ->map(function ($settings, $effect) {
-                return Effect::make($effect, $settings);
-            });
     }
 
     /**
      *  Static constructor
      * @param string $file
-     * @param array $options
-     * @param array $effects
      * @return static
      */
-    public static function make(string $file, $options = [], $effects = [])
+    public static function make(string $file)
     {
-        return new static($file, $options, $effects);
+        return new static($file);
     }
 
     /**
@@ -65,23 +48,32 @@ class Input implements InputInterface
      */
     public function toString()
     {
-        $string = "\"|$this->sox ";
+        /** @var string $pipe_cmd Pipe command format */
+        $pipe_cmd = "\"|$this->sox %s $this->file -p %s\"";
 
-        if ($this->volumeFactor !== 1.0 && $this->volumeFactor !== 1) {
-            $string .= "-v $this->volumeFactor ";
+        /** @var string $volume Volume settings */
+        $volume = '';
+
+        /** @var string $trim Cutting settings */
+        $trim = '';
+
+        if (!is_null($this->volumeFactor)) {
+            $volume = "-v $this->volumeFactor ";
         }
-
-        $string .= $this->file . ' -p';
 
         if (!empty($this->cutPoints)) {
             if (count($this->cutPoints) == 1) {
-                $string .= ' trim ' . $this->cutPoints[0];
+                $trim = ' trim ' . $this->cutPoints[0];
             } else {
-                $string .= ' trim ' . $this->cutPoints[0] . ' ' . $this->cutPoints[1];
+                $trim = ' trim ' . $this->cutPoints[0] . ' ' . $this->cutPoints[1];
             }
         }
 
-        return $string . "\"";
+        if ($this->isPipe) {
+            return sprintf($pipe_cmd, $volume, $trim);
+        }
+
+        return " $volume $this->file $trim";
     }
 
 
@@ -130,12 +122,12 @@ class Input implements InputInterface
         }
     }
 
+    public function pipe($enabled = true)
+    {
+        $this->isPipe = $enabled;
 
-    /*
-     *
-     *
-     *
-     */
+        return $this;
+    }
 
     /**
      * @param string $file

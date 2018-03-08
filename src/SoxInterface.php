@@ -2,6 +2,7 @@
 
 namespace MiragePresent\Sox;
 
+use MiragePresent\Sox\Classes\InputInterface;
 
 interface SoxInterface
 {
@@ -16,32 +17,32 @@ interface SoxInterface
     /**
      *  Set concat mode
      *
-     * @return $this
+     * @return \MiragePresent\Sox\SoxInterface
      */
-    public function concat();
+    public static function concat();
 
     /**
      *  Set mix mode
      *
-     * @return $this
+     * @return \MiragePresent\Sox\SoxInterface
      */
-    public function mix();
+    public static function mix();
 
     /**
      *  Add input file
      *
      * @param \MiragePresent\Sox\Classes\InputInterface $input File path
-     * @return $this
+     * @return \MiragePresent\Sox\SoxInterface
      */
-    public function addInput(\MiragePresent\Sox\Classes\InputInterface $input);
+    public function addInput(InputInterface $input);
 
     /**
      *  Output the result
      *
      * @param string $new_file Path to new file
-     * @param array $options Output options
-     * @return $this
+     * @param string $options Output options
+     * @return \MiragePresent\Sox\SoxInterface
      */
-    public function saveAs(string $new_file, array $options = []);
+    public function saveAs(string $new_file, string $options = '');
 
 }
