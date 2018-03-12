@@ -15,7 +15,7 @@ class Sox implements SoxInterface
     protected $sox;
 
     /** @var  string $mode Input File Combining  */
-    protected $mode = ' --combine sequence';
+    protected $mode = '';
 
     /** @var \Illuminate\Support\Collection $inputs Inputs */
     protected $inputs;
