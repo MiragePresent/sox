@@ -25,8 +25,6 @@ class Input implements InputInterface
      */
     public function __construct(string $file)
     {
-        $this->verifyFile($file);
-
         $this->file = $file;
         $this->sox = config('sox.sox');
     }
@@ -127,18 +125,6 @@ class Input implements InputInterface
         $this->isPipe = $enabled;
 
         return $this;
-    }
-
-    /**
-     * @param string $file
-     * @throws \InvalidArgumentException
-     */
-    private function verifyFile(string $file) {
-        if ( ! file_exists( $file ) ) {
-            throw new \InvalidArgumentException( "Input file was not found" );
-        } elseif ( ! is_file( $file ) ) {
-            throw new \InvalidArgumentException( "Input is directory" );
-        }
     }
 
 }
